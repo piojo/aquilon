@@ -16,32 +16,26 @@
 
 # Source function library
 . /etc/rc.d/init.d/functions
+. /etc/sysconfig/aquilon
 
-RETVAL=0
-prog="aqd"
-pidfile=/var/run/aqd.pid
-twistd=/opt/aquilon/bin/twistd.py
-conffile="/etc/aqd.conf"
-logfile=/var/log/aqd.log
-lockfile=/var/lock/subsys/aqd
-py_bin=/usr/local/aquilon/pythonenv/bin/python2.6
+retval=0
 
 start() {
-    if [[ -x $py_bin ]]; then
+    if [[ -x $PY_BIN ]]; then
         echo -n "Starting aquilon broker: "
         if [[ $UID -ne 0 ]]; then
-            RETVAL=1
+            retval=1
             failure
         else
-            $py_bin $twistd --logfile=$logfile --pidfile=$pidfile aqd --config=$conffile
-            RETVAL=$?
-            if [[ $RETVAL -eq 0 ]]; then
+            $PY_BIN $TWISTD --logfile=$LOGFILE --pidfile=$PIDFILE aqd --config=$conffile
+            retval=$?
+            if [[ $retval -eq 0 ]]; then
                 touch $lockfile
                 success
             fi
         fi
-        echo 
-        return $RETVAL
+        echo
+        return $retval
     else
         exit 5
     fi
@@ -50,17 +44,17 @@ start() {
 stop() {
     echo -n "Stopping aquilon broker: "
     if [ $UID -ne 0 ]; then
-        RETVAL=1
+        retval=1
         failure
     else
-        killproc -p $pidfile $py_bin
-        RETVAL=$?
-        if [[ $RETVAL -eq 0 ]]; then
+        killproc -p $PIDFILE $PY_BIN
+        retval=$?
+        if [[ $retval -eq 0 ]]; then
             rm -f $lockfile
         fi
     fi
     echo
-    return $RETVAL
+    return $retval
 }
 
 restart(){
@@ -77,28 +71,28 @@ case "$1" in
     start)
         aqstatus && exit 0
         start
-        RETVAL=$?
+        retval=$?
         ;;
     stop)
         aqstatus || exit 0
         stop
-        RETVAL=$?
+        retval=$?
         ;;
     restart)
         restart
-        RETVAL=$?
+        retval=$?
         ;;
     force-reload)
         restart
-        RETVAL=$?
+        retval=$?
         ;;
     status)
-        status -p $pidfile aqd
-        RETVAL=$?
+        status -p $PIDFILE aqd
+        retval=$?
         ;;
     *)
         echo $"Usage: $0 {start|stop|status|restart|force-reload}"
-        RETVAL=2
+        retval=2
 esac
 
-exit $RETVAL
+exit $retval
