@@ -41,10 +41,24 @@ global_defaults = {
             "srcdir": os.path.realpath(os.path.join(
                             os.path.dirname(__file__), "..", "..", "..")),
             "hostname": socket.getfqdn(),
+            "sharedir" : "/usr/share/aquilon/etc",
         }
+
+def get_defaults(base, share):
+    """Look for the aqd.conf.defaults file in either base (typically the
+    working copy) or in share (typically /usr/share)"""
+    basepath = os.path.join(base, "etc", "aqd.conf.defaults")
+    sharepath = os.path.join(share, "aqd.conf.defaults")
+
+    if os.path.isfile(basepath):
+        return basepath
+    else:
+        return sharepath
+    # Should raise something if etcpath doesn't exist either?
 
 
 class Config(SafeConfigParser):
+
     """ Supplies configuration to the broker and database engines
         Set up as a borg/singleton class (can only be instanced once) """
 
@@ -67,8 +81,8 @@ class Config(SafeConfigParser):
             self.baseconfig = os.path.realpath(
                     os.environ.get("AQDCONF", "/etc/aqd.conf"))
         SafeConfigParser.__init__(self, defaults)
-        src_defaults = os.path.join(defaults["srcdir"],
-                "etc", "aqd.conf.defaults")
+        src_defaults = get_defaults(defaults.get("srcdir"),
+                                    defaults.get("sharedir", "/usr/share/aquilon/etc"))
         read_files = self.read([src_defaults, self.baseconfig])
         for file in [src_defaults, self.baseconfig]:
             if file not in read_files:
