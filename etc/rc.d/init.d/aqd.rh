@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+# aqd	control an Aquilon broker
+#
+### BEGIN INIT INFO
+# Provides: aqd
+# Required-Start: $local_fs $remote_fs
+# Required-Stop: $local_fs $remote_fs
+# Should-Start: $syslog $network
+# Should-Stop: $syslog $network
+# Default-Start: 2 3 5
+# Default-Stop: 0 1 6
+# Short-Description: Aquilon Broker
+# Description: Quattor Aquilon Broker Daemon
+### END INIT INFO
+
+# Source function library
+. /etc/rc.d/init.d/functions
+. /etc/sysconfig/aqd
+RETVAL=0
+
+start() {
+    if [[ -x $PY_BIN ]]; then
+        echo -n "Starting aquilon broker: "
+        if [[ $UID -ne 0 ]]; then
+            RETVAL=1
+            failure
+        else
+            su -s /bin/bash $USERNAME -c "$PY_BIN $TWISTD --logfile=$LOGFILE --pidfile=$PIDFILE aqd --config=$CONF_FILE"
+            RETVAL=$?
+            if [[ $RETVAL -eq 0 ]]; then
+                touch $LOCKFILE
+                success
+            fi
+        fi
+        echo
+        return $RETVAL
+    else
+        exit 5
+    fi
+}
+
+stop() {
+    echo -n "Stopping aquilon broker: "
+    if [ $UID -ne 0 ]; then
+        RETVAL=1
+        failure
+    else
+        killproc -p $PIDFILE $PY_BIN
+        RETVAL=$?
+        if [[ $RETVAL -eq 0 ]]; then
+            rm -f $LOCKFILE
+        fi
+    fi
+    echo
+    return $RETVAL
+}
+
+restart(){
+    stop
+    start
+}
+
+aqstatus(){
+    status aqd >/dev/null 2>&1
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        aqstatus && exit 0
+        start
+        RETVAL=$?
+        ;;
+    stop)
+        aqstatus || exit 0
+        stop
+        RETVAL=$?
+        ;;
+    restart)
+        restart
+        RETVAL=$?
+        ;;
+    force-reload)
+        restart
+        RETVAL=$?
+        ;;
+    status)
+        status -p $PIDFILE aqd
+        RETVAL=$?
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|force-reload}"
+        RETVAL=2
+esac
+
+exit $RETVAL
