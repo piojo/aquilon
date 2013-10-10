@@ -3,6 +3,8 @@ DOCBOOK_XSL_VERSION = 1.77.1
 LIBXSLT_VERSION = 1.1.26-2.7.8-z1.2a
 LIBXML_VERSION = 2.7.8
 
+STYLE_VARIANT =
+
 DOCBOOK = /ms/dist/fsf/PROJ/docbook/$(DOCBOOK_VERSION)
 DOCBOOK_XSL = /ms/dist/fsf/PROJ/docbook-xsl-ns/$(DOCBOOK_XSL_VERSION)/common
 
@@ -39,12 +41,12 @@ common/member_location_options.xml: generate_locations.xsl common/location_optio
 man: $(MAN_OUTPUT)
 
 $(MAN_OUTPUT): $(COMMAND_SOURCES) $(GENERATED_XML) version.txt
-	$(XSLTPROC) $(XSLT_PARAMS) style-man.xsl $(COMMAND_SOURCES)
+	$(XSLTPROC) $(XSLT_PARAMS) style-man$(STYLE_VARIANT).xsl $(COMMAND_SOURCES)
 
 html: $(HTML_OUTPUT)
 
 $(HTML_OUTPUT): $(ALL_SOURCES) $(GENERATED_XML) version.txt
-	$(XSLTPROC) $(XSLT_PARAMS) style-html.xsl $(ALL_SOURCES)
+	$(XSLTPROC) $(XSLT_PARAMS) style-html$(STYLE_VARIANT).xsl $(ALL_SOURCES)
 
 version.txt: FORCE
 	@# We don't want the -rc suffix to show up in the man pages
