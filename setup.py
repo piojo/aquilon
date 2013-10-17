@@ -66,6 +66,20 @@ def find_packages(path):
             l.append(m)
     return l
 
+def find_regular_files(path):
+    """Finds all the regular files under a directory and returns the
+    tuples that would install such files"""
+    l = []
+    for dirpath, dirnames, filenames in os.walk(path):
+        for d in dirnames:
+            base = dirpath.strip()
+            if base:
+                l.append(("/usr/share/aquilon/%s" % base,
+                          [os.path.join(base, f) for f in filenames]))
+    print l
+    return l
+
+
 all_packages = find_packages("lib")
 all_packages.extend(find_packages("bootstrap/bootstrap_ms"))
 all_scripts = glob.glob(os.path.join("bin", "a*"))
@@ -93,6 +107,7 @@ setup(name="aquilon",
                   ("/usr/share/html",
                    glob.glob("lib/aquilon/worker/formats/mako/raw/*mako")),
                   ("/usr/share/doc/man/man1", glob.glob("doc/man/man1/*1")),
-                  ("/usr/share/aquilon/doc/html", glob.glob("doc/html/*"))],
+                  ("/usr/share/aquilon/doc/html", glob.glob("doc/html/*"))] +
+      find_regular_files("upgrade"),
       scripts=all_scripts,
       url="http://quattor.org")
